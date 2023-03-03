@@ -20,12 +20,10 @@ namespace BTCPayServer.Controllers.Greenfield
     public class GreenfieldStoreUsersController : ControllerBase
     {
         private readonly StoreRepository _storeRepository;
-        private readonly UserManager<ApplicationUser> _userManager;
 
         public GreenfieldStoreUsersController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager)
         {
             _storeRepository = storeRepository;
-            _userManager = userManager;
         }
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/users")]
@@ -36,8 +34,8 @@ namespace BTCPayServer.Controllers.Greenfield
             return store == null ? StoreNotFound() : Ok(FromModel(store));
         }
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpDelete("~/api/v1/stores/{storeId}/users/{idOrEmail}")]
-        public async Task<IActionResult> RemoveStoreUser(string storeId, string idOrEmail)
+        [HttpDelete("~/api/v1/stores/{storeId}/users/{userId}")]
+        public async Task<IActionResult> RemoveStoreUser(string storeId, string userId)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -45,9 +43,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 return StoreNotFound();
             }
 
-            var userId = await _userManager.FindByIdOrEmail(idOrEmail);
-            if (userId != null && await _storeRepository.RemoveStoreUser(storeId, idOrEmail))
+            if (await _storeRepository.RemoveStoreUser(storeId, userId))
             {
+
                 return Ok();
             }
 

@@ -15,7 +15,6 @@
 
 * Remove superflous punctuation in some translations
 * Update Polski translation
-* Greenfield: Routes accepting a userId can now also accept userEmail (#4732)
 
 ## 1.8.0
 

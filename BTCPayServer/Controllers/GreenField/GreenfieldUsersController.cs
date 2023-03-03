@@ -69,22 +69,22 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/users/{idOrEmail}")]
         public async Task<IActionResult> GetUser(string idOrEmail)
         {
-            var user = await _userManager.FindByIdOrEmail(idOrEmail);
+            var user = (await _userManager.FindByIdAsync(idOrEmail)) ?? await _userManager.FindByEmailAsync(idOrEmail);
             if (user != null)
             {
                 return Ok(await FromModel(user));
             }
-            return this.UserNotFound();
+            return UserNotFound();
         }
 
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/users/{idOrEmail}/lock")]
         public async Task<IActionResult> LockUser(string idOrEmail, LockUserRequest request)
         {
-            var user = await _userManager.FindByIdOrEmail(idOrEmail);
+            var user = await _userManager.FindByIdAsync(idOrEmail) ?? await _userManager.FindByEmailAsync(idOrEmail);
             if (user is null)
             {
-                return this.UserNotFound();
+                return UserNotFound();
             }
 
             var success = await _userService.ToggleUser(user.Id, request.Locked ? DateTimeOffset.MaxValue : null);
@@ -223,7 +223,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
-                return this.UserNotFound();
+                return UserNotFound();
             }
 
             // We can safely delete the user if it's not an admin user
@@ -250,6 +250,13 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var roles = (await _userManager.GetRolesAsync(data)).ToArray();
             return UserService.FromModel(data, roles);
+        }
+
+
+
+        private IActionResult UserNotFound()
+        {
+            return this.CreateAPIError(404, "user-not-found", "The user was not found");
         }
     }
 }
